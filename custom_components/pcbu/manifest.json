@@ -1,0 +1,19 @@
+{
+  "domain": "pcbu",
+  "name": "PC Bio Unlock",
+  "integration_type": "device",
+  "codeowners": [
+    "@lmgarret"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/lmgarret/hass-pcbu",
+  "homekit": {},
+  "iot_class": "local_push",
+  "requirements": [
+    "py-pcbu==0.1.5"
+  ],
+  "version": "0.1.0",
+  "ssdp": [],
+  "zeroconf": []
+}

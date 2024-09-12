@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "remote_host": "Remote host IP address",
+          "bind_ip": "Local IP address",
+          "pair_port": "Pair port",
+          "unlock_port": "Unlock port",
+          "encryption_key": "Encryption key"
+        }
+      }
+    },
+    "error": {
+      "remote_unreachable": "Remote device is unreachable",
+      "timeout": "Timeout while connecting",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
