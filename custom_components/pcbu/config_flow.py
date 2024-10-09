@@ -81,7 +81,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> PCBLockCo
     _LOGGER.debug("TCPPairClient started")
     # Return info that you want to store in the config entry.
     _LOGGER.debug("Initiating pairing process")
-    response = client.pair(timeout=SOCKET_TIMEOUT)
+    response = await client.pair(timeout=SOCKET_TIMEOUT)
 
     _LOGGER.debug("Got a pairing response")
     return PCBLockConfig(
@@ -96,7 +96,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> PCBLockCo
             name=response.host_name,
             ip_address=data[CONF_REMOTE_HOST],
             mac_address=response.mac_address,
-            os=response.hostOS,
+            os=response.host_os,
         ),
     )
 
