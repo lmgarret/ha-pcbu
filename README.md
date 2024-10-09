@@ -1,3 +1,12 @@
+
+> [!CAUTION]
+> This integration is super experimental, not all features are implemented nor properly implemented. You will encounter bugs using it.
+> 
+> Also the disclaimer from [`py-pcbu`](https://github.com/lmgarret/py-pcbu) applies here too!
+> PCBU and this library handles your accounts passwords. This project's license includes a NO-LIABILITY disclaimer that I won't repeat here. Please handle your account passwords responsibly!
+> And always inspect projects that handle such sensitive data, even if they're FOSS.
+
+
 # PC Bio Unlock (Unofficial) for Home Assistant
 
 ## Installation
