@@ -19,7 +19,6 @@ from .const import (
     CONF_BIND_IP,
     CONF_ENCRYPTION_KEY,
     CONF_PAIR_PORT,
-    CONF_UNLOCK_PORT,
     CONF_REMOTE_HOST,
     DOMAIN,
     SOCKET_TIMEOUT,
@@ -52,11 +51,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             CONF_ENCRYPTION_KEY,
             description="The encryption key for secure communication",
         ): str,
-        vol.Required(
-            CONF_UNLOCK_PORT,
-            description="The port to listen on for the pairing/unlocking process",
-            default=43296,
-        ): vol.All(int, cv.port),
     }
 )
 
@@ -91,7 +85,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> PCBLockCo
         pairing_id=response.pairing_id,
         desktop_ip_address=data[CONF_REMOTE_HOST],
         server_ip_address=data[CONF_BIND_IP],
-        server_port=data[CONF_UNLOCK_PORT],
+        # no plan to make it customizable, see https://github.com/MeisApps/pcbu-desktop/issues/20
+        server_port=43298,
         remote_info=PCBRemoteInfo(
             name=response.host_name,
             ip_address=data[CONF_REMOTE_HOST],
