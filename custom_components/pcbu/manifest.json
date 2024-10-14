@@ -11,9 +11,9 @@
   "homekit": {},
   "iot_class": "local_push",
   "requirements": [
-    "py-pcbu==0.4.0"
+    "py-pcbu==0.4.1"
   ],
-  "version": "0.1.1",
+  "version": "0.1.2",
   "ssdp": [],
   "zeroconf": []
 }
