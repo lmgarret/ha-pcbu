@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      is_version_greater: ${{ steps.pyproject-version.outputs.is_version_greater }}
-      version: ${{ steps.pyproject-version.outputs.version }}
+      is_version_greater: ${{ steps.manifest-version.outputs.is_version_greater }}
+      version: ${{ steps.manifest-version.outputs.version }}
     steps:
     - uses: lmgarret/did-json-version-change@v1
       id: manifest-version
@@ -40,7 +40,6 @@ jobs:
   github-release:
     name: GitHub release
     needs:
-    - build
     - version-check
     - changelog
     runs-on: ubuntu-latest
