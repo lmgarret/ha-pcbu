@@ -7,13 +7,13 @@
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/lmgarret/hass-pcbu",
+  "documentation": "https://github.com/lmgarret/ha-pcbu",
   "homekit": {},
   "iot_class": "local_push",
   "requirements": [
     "py-pcbu==0.4.0"
   ],
-  "version": "0.1.0",
+  "version": "0.1.1",
   "ssdp": [],
   "zeroconf": []
 }
