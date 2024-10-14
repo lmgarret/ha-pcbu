@@ -1,0 +1,57 @@
+name: Release
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  version-check:
+    name: New version?
+    runs-on: ubuntu-latest
+
+    outputs:
+      is_version_greater: ${{ steps.pyproject-version.outputs.is_version_greater }}
+      version: ${{ steps.pyproject-version.outputs.version }}
+    steps:
+    - uses: lmgarret/did-json-version-change@v1
+      id: manifest-version
+      with:
+        json_file: custom_components/pcbu/manifest.json
+        jq_expr: .version
+
+  changelog:
+    name: Parse version's changelog
+    needs: version-check
+    runs-on: ubuntu-latest
+
+    outputs:
+      changes: ${{ steps.changelog.outputs.description }}
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@main
+    - name: Parse Changelog Entry
+      id: changelog
+      uses: coditory/changelog-parser@v1
+      with:
+        version: ${{ needs.version-check.outputs.version }}
+
+  github-release:
+    name: GitHub release
+    needs:
+    - build
+    - version-check
+    - changelog
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # IMPORTANT: mandatory for making GitHub Releases
+      id-token: write  # IMPORTANT: mandatory for sigstore
+
+    steps:
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ needs.version-check.outputs.version }}
+        body: ${{ needs.changelog.outputs.changes }}
