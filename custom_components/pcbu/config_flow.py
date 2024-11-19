@@ -84,6 +84,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> PCBLockCo
         encryption_key=data[CONF_ENCRYPTION_KEY],
         pairing_id=response.pairing_id,
         desktop_ip_address=data[CONF_REMOTE_HOST],
+        desktop_os=response.host_os,
         server_ip_address=data[CONF_BIND_IP],
         # no plan to make it customizable, see https://github.com/MeisApps/pcbu-desktop/issues/20
         server_port=43298,
