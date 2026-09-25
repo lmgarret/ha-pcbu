@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Desktops sharing the same IP address overwrote each other's lock
 - Locks now become unavailable when the desktop drops its unlock request (requires a py-pcbu release with `on_unlock_request_cancelled`)
 - A failed unlock now raises an error and resets the lock instead of silently leaving it available
+- Unloading or reloading an entry: lock entities were not removed and the unlock server could fail to restart
+- The unlock server is stopped when no lock uses it anymore
+- Entries created with 0.1.2 or older failing to load since 0.1.3 (missing desktop OS)
+- The bind IP default in the config flow was computed once, when the module was imported
 
 ## [0.1.3] - 2024-11-19
 ### Fixed

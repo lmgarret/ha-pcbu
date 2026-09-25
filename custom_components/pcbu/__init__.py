@@ -7,8 +7,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .lock import PCBUnlockServer, PCBLock
-from .models import PCBLockConfig
+from .lock import PCBUnlockServer
 
 PLATFORMS: list[Platform] = [Platform.LOCK]
 
@@ -27,11 +26,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    pcbunlock_server: PCBUnlockServer = hass.data[DOMAIN]["server"]
+    # removing the lock entity also removes it from the unlock server
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN]["entries"].pop(entry.entry_id)
+    return unload_ok
 
-    entry_data = hass.data[DOMAIN]["entries"][entry.entry_id]
-    lock_conf = PCBLockConfig.from_dict(entry_data)
-    lock = PCBLock(lock_conf)
-    await pcbunlock_server.remove_lock(lock)
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    if entry.version == 1:
+        # entries created with py-pcbu < 0.5.0 lack the desktop OS
+        data = {**entry.data}
+        if "desktopOs" not in data and "desktop_os" not in data:
+            remote_info = data.get("remoteInfo") or data.get("remote_info") or {}
+            data["desktopOs"] = remote_info.get("os", "")
+        hass.config_entries.async_update_entry(entry, data=data, version=2)
     return True
