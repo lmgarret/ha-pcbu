@@ -1,6 +1,7 @@
 # ruff: noqa: D103, D102, D107, D101
 import asyncio
 from collections import defaultdict
+import functools
 from typing import TypedDict
 
 from pcbu.models import PCPairing
@@ -9,6 +10,7 @@ from pcbu.tcp.unlock_server import TCPUnlockServerBase
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -22,14 +24,11 @@ class TCPUnlockServer(TCPUnlockServerBase):
     """Implementation of py-pcbu's TCPUnlockServerBase. When the unlock requests comes in, sets the lock as available."""
 
     def __init__(self, locks: list["PCBLock"]) -> None:
-        self.locks = locks
-        super().__init__([lock.conf for lock in locks])
-        for lock in locks:
-
-            async def unlock_cb():
-                await self.unlock(lock.conf)
-
-            lock._unlock_cb = unlock_cb
+        self.locks = list(locks)
+        super().__init__([lock.conf for lock in self.locks])
+        for lock in self.locks:
+            # bind each lock's own conf, a closure would capture the loop variable
+            lock._unlock_cb = functools.partial(self.unlock, lock.conf)
 
     def get_lock(self, pairing: PCPairing) -> "PCBLock":
         for lock in self.locks:
@@ -48,6 +47,12 @@ class TCPUnlockServer(TCPUnlockServerBase):
     async def on_invalid_unlock_request(self, ip_address: str):
         """see TCPUnlockServerBase.on_invalid_unlock_request"""
         _LOGGER.info(f"Rejected unlock request from {ip_address}")
+
+    async def on_unlock_request_cancelled(self, pairing: PCPairing) -> None:
+        """see TCPUnlockServerBase.on_unlock_request_cancelled"""
+        _LOGGER.info(f"Unlock request from {pairing.desktop_ip_address} was dropped")
+        lock = self.get_lock(pairing)
+        lock.set_unavailable()
 
 
 class TCPServerRuntime(TypedDict):
@@ -87,12 +92,12 @@ class PCBUnlockServer:
 
     async def add_lock(self, lock: "PCBLock"):
         port = lock.conf.server_port
-        self.locks[port][lock.conf.desktop_ip_address] = lock
+        self.locks[port][lock.conf.pairing_id] = lock
         await self._refresh_tcp_server(port=port, new_locks=self.locks[port].values())
 
     async def remove_lock(self, lock: "PCBLock"):
         port = lock.conf.server_port
-        del self.locks[lock.conf.server_port][lock.conf.desktop_ip_address]
+        del self.locks[port][lock.conf.pairing_id]
         await self._refresh_tcp_server(port=port, new_locks=self.locks[port].values())
 
 
@@ -155,14 +160,24 @@ class PCBLock(LockEntity):
         pass
 
     async def async_unlock(self, **kwargs):
-        if self._unlock_cb:
+        if self._unlock_cb is None:
+            raise HomeAssistantError(f"No unlock server is running for {self.name}")
+        try:
             await self._unlock_cb()
-            self._attr_is_locked = False
-            self._attr_available = False
-            self.async_write_ha_state()
+        except (ValueError, OSError) as err:
+            raise HomeAssistantError(f"Could not unlock {self.name}: {err}") from err
+        finally:
+            # the unlock request can only be answered once, even if it failed
+            self.set_unavailable()
 
     @callback
     def set_available_and_locked(self):
         self._attr_available = True
         self._attr_is_locked = True
+        self.async_write_ha_state()
+
+    @callback
+    def set_unavailable(self):
+        self._attr_available = False
+        self._attr_is_locked = False
         self.async_write_ha_state()

@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- With several paired desktops, unlocking a lock sent the credentials to the last paired desktop instead
+- Desktops sharing the same IP address overwrote each other's lock
+- Locks now become unavailable when the desktop drops its unlock request (requires a py-pcbu release with `on_unlock_request_cancelled`)
+- A failed unlock now raises an error and resets the lock instead of silently leaving it available
 
 ## [0.1.3] - 2024-11-19
 ### Fixed
