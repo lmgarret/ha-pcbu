@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 
-from dataclass_wizard import JSONWizard
-from pcbu.models import PCPairingSecret
+from homeassistant.config_entries import ConfigEntry
+from pcbu.models import PCBUModel, PCPairingSecret
 
 
 @dataclass
-class PCBRemoteInfo(JSONWizard):
+class PCBRemoteInfo(PCBUModel):
     name: str
     ip_address: str
     mac_address: str
@@ -14,8 +14,11 @@ class PCBRemoteInfo(JSONWizard):
 
 @dataclass
 class PCBLockConfig(PCPairingSecret):
-    """Model reprensenting all the information needed to unlocka desktop. Contains sensitive fields."""
+    """All the information needed to unlock a desktop. Contains sensitive fields."""
 
     encryption_key: str
     server_port: int
     remote_info: PCBRemoteInfo
+
+
+type PCBUConfigEntry = ConfigEntry[PCBLockConfig]

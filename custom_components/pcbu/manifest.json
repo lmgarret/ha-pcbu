@@ -14,8 +14,7 @@
     "pcbu"
   ],
   "requirements": [
-    "dataclass-wizard>=0.23.0,<1",
-    "py-pcbu==0.6.0"
+    "py-pcbu==0.7.0"
   ],
-  "version": "0.2.1"
+  "version": "0.3.0"
 }

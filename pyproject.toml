@@ -15,6 +15,7 @@ source = ["custom_components"]
 
 [tool.coverage.report]
 show_missing = true
+fail_under = 90
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
