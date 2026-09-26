@@ -6,10 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.2.0] - 2026-09-26
+### Changed
+- Requires py-pcbu 0.6.0
+
 ### Fixed
 - With several paired desktops, unlocking a lock sent the credentials to the last paired desktop instead
 - Desktops sharing the same IP address overwrote each other's lock
-- Locks now become unavailable when the desktop drops its unlock request (requires a py-pcbu release with `on_unlock_request_cancelled`)
+- Locks now become unavailable when the desktop drops its unlock request
 - A failed unlock now raises an error and resets the lock instead of silently leaving it available
 - Unloading or reloading an entry: lock entities were not removed and the unlock server could fail to restart
 - The unlock server is stopped when no lock uses it anymore
@@ -32,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - First commit
 
+[0.2.0]: https://github.com/lmgarret/ha-pcbu/compare/0.1.3...0.2.0
 [0.1.3]: https://github.com/lmgarret/ha-pcbu/compare/0.1.2...0.1.3
 [0.1.2]: https://github.com/lmgarret/ha-pcbu/compare/0.1.1...0.1.2
 [0.1.1]: https://github.com/lmgarret/ha-pcbu/compare/0.1.0...0.1.1
