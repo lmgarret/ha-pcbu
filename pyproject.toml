@@ -1,0 +1,47 @@
+[project]
+name = "ha-pcbu"
+description = "Home Assistant custom integration for PC Bio Unlock"
+requires-python = ">=3.14"
+dynamic = ["version"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "--cov=custom_components --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["custom_components"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "G",   # logging format
+    "SIM", # simplify
+    "RUF", # ruff-specific
+    "ASYNC",
+]
+ignore = [
+    "E501", # line length, handled by the formatter
+]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+known-first-party = ["custom_components", "tests"]
+combine-as-imports = true

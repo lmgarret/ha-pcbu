@@ -17,6 +17,18 @@
 3. Run HomeAssistant in debug mode using F5 in VSCode
 4. Debug stuff
 
+### Tests and linting
+The tests need Python 3.14 and run against the Home Assistant version pinned in `requirements.test.txt`:
+```bash
+uv venv --python 3.14 && source .venv/bin/activate
+uv pip install -r requirements.test.txt
+jq -r '.requirements[]' custom_components/pcbu/manifest.json | xargs -d '\n' uv pip install
+pytest
+```
+Linting and formatting use [ruff](https://docs.astral.sh/ruff/), through [pre-commit](https://pre-commit.com/): `pre-commit install`, or `pre-commit run --all-files`.
+
+The CI also validates the integration with [hassfest](https://developers.home-assistant.io/blog/2020/04/16/hassfest/) and the [HACS action](https://hacs.xyz/docs/publish/action/).
+
 ---
 
 Repository was bootstrapped using [this tutorial](https://aarongodfrey.dev/home%20automation/building_a_home_assistant_custom_component_part_1/)

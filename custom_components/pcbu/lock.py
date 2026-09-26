@@ -1,22 +1,20 @@
-# ruff: noqa: D103, D102, D107, D101
 import asyncio
 from collections import defaultdict
 import contextlib
 import functools
+import logging
 from typing import TypedDict
-
-from pcbu.models import PCPairing
-from pcbu.tcp.unlock_server import TCPUnlockServerBase
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pcbu.models import PCPairing
+from pcbu.tcp.unlock_server import TCPUnlockServerBase
 
 from .const import DOMAIN
 from .models import PCBLockConfig
-import logging
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,17 +39,17 @@ class TCPUnlockServer(TCPUnlockServerBase):
 
     async def on_valid_unlock_request(self, pairing: PCPairing) -> None:
         """see TCPUnlockServerBase.on_valid_unlock_request"""
-        _LOGGER.info(f"Accepted unlock request from {pairing.desktop_ip_address}")
+        _LOGGER.info("Accepted unlock request from %s", pairing.desktop_ip_address)
         lock = self.get_lock(pairing)
         lock.set_available_and_locked()
 
     async def on_invalid_unlock_request(self, ip_address: str):
         """see TCPUnlockServerBase.on_invalid_unlock_request"""
-        _LOGGER.info(f"Rejected unlock request from {ip_address}")
+        _LOGGER.info("Rejected unlock request from %s", ip_address)
 
     async def on_unlock_request_cancelled(self, pairing: PCPairing) -> None:
         """see TCPUnlockServerBase.on_unlock_request_cancelled"""
-        _LOGGER.info(f"Unlock request from {pairing.desktop_ip_address} was dropped")
+        _LOGGER.info("Unlock request from %s was dropped", pairing.desktop_ip_address)
         lock = self.get_lock(pairing)
         lock.set_unavailable()
 
@@ -79,7 +77,7 @@ class PCBUnlockServer:
             server = self.servers[port]["server"]
             task: asyncio.Task = self.servers[port]["task"]
 
-            _LOGGER.info(f"Stopping server (:{port}) ({len(server.locks)} locks)...")
+            _LOGGER.info("Stopping server (:%s) (%s locks)...", port, len(server.locks))
             task.cancel()
             # wait for the port to be released before binding it again
             with contextlib.suppress(asyncio.CancelledError):
