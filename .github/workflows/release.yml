@@ -32,10 +32,17 @@ jobs:
           echo "is_new_version=true" >> "$GITHUB_OUTPUT"
         fi
 
-  github-release:
-    name: GitHub release
+  ci:
+    name: CI
     needs: version-check
     if: needs.version-check.outputs.is_new_version == 'true'
+    uses: ./.github/workflows/ci.yml
+
+  github-release:
+    name: GitHub release
+    needs:
+    - version-check
+    - ci
     runs-on: ubuntu-latest
 
     permissions:

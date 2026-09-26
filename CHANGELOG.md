@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-26
+### Added
+- Reconfigure step, to update the PC and Home Assistant IP addresses without pairing again
+- Diagnostics, with the password, encryption key and username redacted
+- IP address validation in the config flow, and a dedicated error when the PC refuses the pairing
+- Descriptions of the config flow fields, translated error messages when unlocking fails
+- CI running ruff, the tests against Home Assistant 2026.9, hassfest and the HACS validation
+- Dependabot for GitHub Actions and the test requirements
+- `issue_tracker` and `loggers` in the manifest, minimum Home Assistant version in `hacs.json`
+
+### Changed
+- Requires py-pcbu 0.7.0 (dataclass-wizard 1.x) and Home Assistant 2025.2 or newer
+- The lock entity is named after its device (`has_entity_name`), and the device shows the PC's OS as model
+- Config entries keep their parsed config in `runtime_data`, and the unlock server moved to its own module
+- The pairing tells the PC Home Assistant's configured IP address instead of a guessed one
+- Tooling: `pyproject.toml` with ruff replaces `setup.cfg` (flake8, isort, mypy for Python 3.7), and pre-commit hooks are updated
+
+### Fixed
+- Reloading an entry while its PC waited for an unlock hung (py-pcbu 0.7.0)
+- hassfest errors: manifest keys order, missing `CONFIG_SCHEMA`
+
 ## [0.2.1] - 2026-09-26
 ### Fixed
 - The integration failed to load on fresh installs, which pulled dataclass-wizard 1.0: it is now limited to `<1`
@@ -41,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - First commit
 
+[0.3.0]: https://github.com/lmgarret/ha-pcbu/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/lmgarret/ha-pcbu/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/lmgarret/ha-pcbu/compare/0.1.3...0.2.0
 [0.1.3]: https://github.com/lmgarret/ha-pcbu/compare/0.1.2...0.1.3

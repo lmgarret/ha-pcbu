@@ -1,20 +1,20 @@
 {
   "domain": "pcbu",
   "name": "PC Bio Unlock",
-  "integration_type": "device",
   "codeowners": [
     "@lmgarret"
   ],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://github.com/lmgarret/ha-pcbu",
-  "homekit": {},
+  "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": [
-    "dataclass-wizard>=0.23.0,<1",
-    "py-pcbu==0.6.0"
+  "issue_tracker": "https://github.com/lmgarret/ha-pcbu/issues",
+  "loggers": [
+    "pcbu"
   ],
-  "version": "0.2.1",
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": [
+    "py-pcbu==0.7.0"
+  ],
+  "version": "0.3.0"
 }

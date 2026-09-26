@@ -1,22 +1,53 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
+  "config": {
+    "step": {
+      "user": {
+        "title": "Pair with a PC",
+        "description": "In the PC Bio Unlock desktop app, start pairing a new device with the TCP method, then enter the details it shows next to the QR code.",
+        "data": {
+          "remote_host": "PC IP address",
+          "bind_ip": "Home Assistant IP address",
+          "pair_port": "Pairing port",
+          "encryption_key": "Encryption key"
         },
-        "error": {
-            "remote_unreachable": "Remote device is unreachable",
-            "timeout": "Timeout while connecting",
-            "unknown": "Unexpected error"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "bind_ip": "Local IP address",
-                    "encryption_key": "Encryption key",
-                    "local_port": "Local port",
-                    "remote_host": "Remote host IP address"
-                }
-            }
+        "data_description": {
+          "remote_host": "IP address of the PC, as shown by the PC Bio Unlock desktop app.",
+          "bind_ip": "IP address of Home Assistant, which the PC sends its unlock requests to.",
+          "pair_port": "Pairing port shown by the desktop app.",
+          "encryption_key": "Encryption key shown by the desktop app."
         }
+      },
+      "reconfigure": {
+        "title": "Update the IP addresses",
+        "description": "Update the IP addresses if the PC or Home Assistant changed address. The PC stays paired.",
+        "data": {
+          "remote_host": "PC IP address",
+          "bind_ip": "Home Assistant IP address"
+        },
+        "data_description": {
+          "remote_host": "IP address of the PC, as shown by the PC Bio Unlock desktop app.",
+          "bind_ip": "IP address of Home Assistant, which the PC sends its unlock requests to."
+        }
+      }
+    },
+    "error": {
+      "invalid_ip": "Invalid IP address.",
+      "pairing_refused": "The PC refused the pairing. Check the encryption key, and that the desktop app is waiting for a pairing.",
+      "remote_unreachable": "The PC is unreachable.",
+      "timeout": "Timeout while pairing with the PC.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This PC is already paired.",
+      "reconfigure_successful": "The IP addresses were updated."
     }
+  },
+  "exceptions": {
+    "no_unlock_server": {
+      "message": "No unlock server is running for {name}."
+    },
+    "unlock_failed": {
+      "message": "Could not unlock {name}: {error}"
+    }
+  }
 }
