@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- CI running ruff, the tests against Home Assistant 2026.9, hassfest and the HACS validation
+- Dependabot for GitHub Actions and the test requirements
+- `issue_tracker` and `loggers` in the manifest, minimum Home Assistant version in `hacs.json`
+
+### Changed
+- Tooling: `pyproject.toml` with ruff replaces `setup.cfg` (flake8, isort, mypy for Python 3.7), and pre-commit hooks are updated
+
+### Fixed
+- hassfest errors: manifest keys order, missing `CONFIG_SCHEMA`
 
 ## [0.2.1] - 2026-09-26
 ### Fixed

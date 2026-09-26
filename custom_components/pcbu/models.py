@@ -1,4 +1,3 @@
-# ruff: noqa: D103, D102, D107, D101
 from dataclasses import dataclass
 
 from dataclass_wizard import JSONWizard
@@ -11,6 +10,7 @@ class PCBRemoteInfo(JSONWizard):
     ip_address: str
     mac_address: str
     os: str
+
 
 @dataclass
 class PCBLockConfig(PCPairingSecret):

@@ -1,3 +1,2 @@
-pytest
-pytest-cov
-pytest-homeassistant-custom-component
+# Pins the Home Assistant version the tests run against (homeassistant==2026.9.3)
+pytest-homeassistant-custom-component==0.13.366
