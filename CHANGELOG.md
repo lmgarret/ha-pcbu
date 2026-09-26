@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-26
+### Fixed
+- The integration failed to load on fresh installs, which pulled dataclass-wizard 1.0: it is now limited to `<1`
+
 ## [0.2.0] - 2026-09-26
 ### Changed
 - Requires py-pcbu 0.6.0
@@ -37,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - First commit
 
+[0.2.1]: https://github.com/lmgarret/ha-pcbu/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/lmgarret/ha-pcbu/compare/0.1.3...0.2.0
 [0.1.3]: https://github.com/lmgarret/ha-pcbu/compare/0.1.2...0.1.3
 [0.1.2]: https://github.com/lmgarret/ha-pcbu/compare/0.1.1...0.1.2
