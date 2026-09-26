@@ -1,7 +1,6 @@
 """Test the unlock flow."""
 
 import asyncio
-import contextlib
 
 from pcbu.crypto import encrypt_aes
 from pcbu.models import EncryptedUnlockPayload, PacketUnlockRequest, PCPairingSecret
@@ -10,6 +9,7 @@ from pcbu.tcp.unlock_client import TCPUnlockClient
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_LOCKED, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
@@ -64,10 +64,10 @@ async def locks(hass: HomeAssistant, socket_enabled):
     await asyncio.sleep(0.1)  # let the unlock server bind
     yield confs
 
-    for runtime in hass.data[DOMAIN]["server"].servers.values():
-        runtime["task"].cancel()
-        with contextlib.suppress(asyncio.CancelledError):
-            await runtime["task"]
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    # the unlock server is stopped once no lock uses it anymore
+    assert hass.data[DOMAIN]["server"].servers == {}
 
 
 async def test_unlock_the_requesting_desktop(hass: HomeAssistant, locks):
@@ -102,12 +102,55 @@ async def test_dropped_unlock_request(hass: HomeAssistant, locks):
     payload = EncryptedUnlockPayload(auth_user=conf_a.username, unlock_token="token")
     request = PacketUnlockRequest(
         pairing_id=conf_a.pairing_id,
-        enc_data=encrypt_aes(
-            payload.to_json().encode(), conf_a.encryption_key
-        ).hex(),
+        enc_data=encrypt_aes(payload.to_json().encode(), conf_a.encryption_key).hex(),
     )
     await asend(writer, request.to_json().encode())
     await _wait_for_state(hass, "lock.desktop_a", STATE_LOCKED)
 
     writer.close()
     await _wait_for_state(hass, "lock.desktop_a", STATE_UNAVAILABLE)
+
+
+async def test_reload_entry(hass: HomeAssistant, locks):
+    """Unloading and reloading an entry keeps the other locks working."""
+    conf_a, conf_b = locks
+    entry_a = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "a")
+
+    assert await hass.config_entries.async_unload(entry_a.entry_id)
+    assert entry_a.state is ConfigEntryState.NOT_LOADED
+    await asyncio.sleep(0.1)
+
+    request_b = asyncio.create_task(_client(conf_b).unlock(timeout=5))
+    await _wait_for_state(hass, "lock.desktop_b", STATE_LOCKED)
+    await hass.services.async_call(
+        "lock", "unlock", {"entity_id": "lock.desktop_b"}, blocking=True
+    )
+    assert (await request_b).password == conf_b.password
+
+    assert await hass.config_entries.async_setup(entry_a.entry_id)
+    await hass.async_block_till_done()
+    await asyncio.sleep(0.1)
+
+    request_a = asyncio.create_task(_client(conf_a).unlock(timeout=5))
+    await _wait_for_state(hass, "lock.desktop_a", STATE_LOCKED)
+    await hass.services.async_call(
+        "lock", "unlock", {"entity_id": "lock.desktop_a"}, blocking=True
+    )
+    assert (await request_a).password == conf_a.password
+
+
+async def test_migrate_entry_without_desktop_os(hass: HomeAssistant, socket_enabled):
+    """Entries created before py-pcbu 0.5.0 get their desktop OS from the remote info."""
+    data = _lock_conf("a").to_dict()
+    del data["desktopOs"]
+    data["remoteInfo"]["os"] = "Windows"
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="a", data=data, version=1)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 2
+    assert entry.data["desktopOs"] == "Windows"
+    assert await hass.config_entries.async_unload(entry.entry_id)

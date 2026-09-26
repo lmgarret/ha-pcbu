@@ -1,6 +1,7 @@
 # ruff: noqa: D103, D102, D107, D101
 import asyncio
 from collections import defaultdict
+import contextlib
 import functools
 from typing import TypedDict
 
@@ -69,6 +70,8 @@ class PCBUnlockServer:
         self.hass = hass
         self.locks = defaultdict(dict)
         self.servers: dict[int, TCPServerRuntime] = {}
+        # serializes server restarts, as they share the same port
+        self._refresh_lock = asyncio.Lock()
 
     async def _refresh_tcp_server(self, port: int, new_locks: list["PCBLock"]):
         """assumes the locks all share the same unlock server port"""
@@ -78,7 +81,13 @@ class PCBUnlockServer:
 
             _LOGGER.info(f"Stopping server (:{port}) ({len(server.locks)} locks)...")
             task.cancel()
+            # wait for the port to be released before binding it again
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
             del self.servers[port]
+
+        if not new_locks:
+            return
 
         async def _start_tcp_server(server: TCPUnlockServer):
             async with server:
@@ -91,14 +100,20 @@ class PCBUnlockServer:
         self.servers[port] = {"server": new_server, "task": task}
 
     async def add_lock(self, lock: "PCBLock"):
-        port = lock.conf.server_port
-        self.locks[port][lock.conf.pairing_id] = lock
-        await self._refresh_tcp_server(port=port, new_locks=self.locks[port].values())
+        async with self._refresh_lock:
+            port = lock.conf.server_port
+            self.locks[port][lock.conf.pairing_id] = lock
+            await self._refresh_tcp_server(
+                port=port, new_locks=list(self.locks[port].values())
+            )
 
     async def remove_lock(self, lock: "PCBLock"):
-        port = lock.conf.server_port
-        del self.locks[port][lock.conf.pairing_id]
-        await self._refresh_tcp_server(port=port, new_locks=self.locks[port].values())
+        async with self._refresh_lock:
+            port = lock.conf.server_port
+            self.locks[port].pop(lock.conf.pairing_id, None)
+            await self._refresh_tcp_server(
+                port=port, new_locks=list(self.locks[port].values())
+            )
 
 
 async def async_setup_entry(
@@ -106,29 +121,10 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    pcbunlock_server: PCBUnlockServer = hass.data[DOMAIN]["server"]
-
     entry_data = hass.data[DOMAIN]["entries"][config_entry.entry_id]
     lock_conf = PCBLockConfig.from_dict(entry_data)
 
-    lock = PCBLock(lock_conf)
-    await pcbunlock_server.add_lock(lock)
-    async_add_entities([lock])
-
-
-async def async_unload_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-) -> bool:
-    pcbunlock_server: PCBUnlockServer = hass.data[DOMAIN]["server"]
-
-    entry_data = hass.data[DOMAIN]["entries"][config_entry.entry_id]
-    lock_conf = PCBLockConfig.from_dict(entry_data)
-
-    lock = PCBLock(lock_conf)
-    await pcbunlock_server.remove_lock(lock)
-
-    return True
+    async_add_entities([PCBLock(lock_conf)])
 
 
 class PCBLock(LockEntity):
@@ -153,6 +149,15 @@ class PCBLock(LockEntity):
     @property
     def name(self):
         return self.conf.remote_info.name
+
+    async def async_added_to_hass(self) -> None:
+        pcbunlock_server: PCBUnlockServer = self.hass.data[DOMAIN]["server"]
+        await pcbunlock_server.add_lock(self)
+
+    async def async_will_remove_from_hass(self) -> None:
+        pcbunlock_server: PCBUnlockServer = self.hass.data[DOMAIN]["server"]
+        await pcbunlock_server.remove_lock(self)
+        self._unlock_cb = None
 
     async def async_lock(self, **kwargs):
         # the integration actually does not support locking

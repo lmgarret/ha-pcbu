@@ -28,31 +28,32 @@ from .models import PCBLockConfig, PCBRemoteInfo
 _LOGGER = logging.getLogger(__name__)
 
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(
-            CONF_REMOTE_HOST,
-            description="The IP address of the desktop to pair with",
-            default="192.168.1.100",
-        ): str,
-        # : vol.All(str, cv.matches_regex(r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$")),
-        vol.Required(
-            CONF_BIND_IP,
-            description="The IP address to bind to",
-            default=get_ip(),
-        ): str,
-        # : vol.All(str, cv.matches_regex(r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$")),
-        vol.Required(
-            CONF_PAIR_PORT,
-            description="The pairing port (as in the QR code)",
-            default=43295,
-        ): vol.All(int, cv.port),
-        vol.Required(
-            CONF_ENCRYPTION_KEY,
-            description="The encryption key for secure communication",
-        ): str,
-    }
-)
+def _user_data_schema(bind_ip: str) -> vol.Schema:
+    return vol.Schema(
+        {
+            vol.Required(
+                CONF_REMOTE_HOST,
+                description="The IP address of the desktop to pair with",
+                default="192.168.1.100",
+            ): str,
+            # : vol.All(str, cv.matches_regex(r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$")),
+            vol.Required(
+                CONF_BIND_IP,
+                description="The IP address to bind to",
+                default=bind_ip,
+            ): str,
+            # : vol.All(str, cv.matches_regex(r"^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$")),
+            vol.Required(
+                CONF_PAIR_PORT,
+                description="The pairing port (as in the QR code)",
+                default=43295,
+            ): vol.All(int, cv.port),
+            vol.Required(
+                CONF_ENCRYPTION_KEY,
+                description="The encryption key for secure communication",
+            ): str,
+        }
+    )
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> PCBLockConfig:
@@ -100,7 +101,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> PCBLockCo
 class ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for PC Bio Unlock."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -130,9 +131,10 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=lock_conf.remote_info.name, data=lock_conf.to_dict()
                 )
 
+        bind_ip = await self.hass.async_add_executor_job(get_ip)
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=_user_data_schema(bind_ip),
             errors=errors,
             description_placeholders={
                 "description": (
