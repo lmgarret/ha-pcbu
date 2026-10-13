@@ -12,7 +12,7 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.pcbu.const import DOMAIN
-from custom_components.pcbu.models import PCBLockConfig
+from custom_components.pcbu.models import PCBLockConfig, PCBRemoteInfo
 
 USER_INPUT = {
     "remote_host": "192.168.1.10",
@@ -169,3 +169,80 @@ async def test_reconfigure(hass: HomeAssistant):
     # the pairing is kept
     assert conf.pairing_id == "pairing"
     assert conf.password == "pwd"
+
+
+def _paired_entry(hass: HomeAssistant, **overrides) -> MockConfigEntry:
+    """An entry as created by a previous pairing of RESPONSE's PC."""
+    conf = PCBLockConfig(
+        pairing_id="old",
+        desktop_ip_address="192.168.1.10",
+        desktop_os="Windows",
+        server_ip_address="192.168.1.40",
+        server_port=43298,
+        username="user",
+        password="old-pwd",
+        encryption_key="old-key",
+        remote_info=PCBRemoteInfo(
+            name="desktop",
+            ip_address="192.168.1.10",
+            mac_address="aa:bb:cc:dd:ee:ff",
+            os="Windows",
+        ),
+    )
+    for key, value in overrides.items():
+        setattr(conf, key, value)
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=conf.pairing_id, data=conf.to_dict()
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+async def _pair(hass: HomeAssistant):
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with mock_pair(return_value=RESPONSE):
+        return await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+
+@pytest.mark.parametrize("username", ["user", "USER"])
+async def test_pair_same_session_again(hass: HomeAssistant, username):
+    """Pairing the same user of the same PC again replaces the previous pairing."""
+    entry = _paired_entry(hass, username=username)
+    result = await _pair(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "pairing_updated"
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert entry.unique_id == "pairing"
+    conf = PCBLockConfig.from_dict(entry.data)
+    assert conf.pairing_id == "pairing"
+    assert conf.password == "pwd"
+    assert conf.encryption_key == "key"
+    assert conf.server_ip_address == "192.168.1.2"
+
+
+async def test_pair_other_user_of_same_pc(hass: HomeAssistant):
+    """Another user of the same PC is another pairing."""
+    _paired_entry(hass, username="someone else")
+    result = await _pair(hass)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+
+async def test_pair_same_user_other_os_case(hass: HomeAssistant):
+    """Usernames only ignore case on Windows."""
+    entry = _paired_entry(hass, username="USER")
+    response = PacketPairResponse.from_dict({**RESPONSE.to_dict(), "hostOS": "Linux"})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with mock_pair(return_value=response):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.unique_id == "old"

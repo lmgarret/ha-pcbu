@@ -40,7 +40,14 @@
     },
     "abort": {
       "already_configured": "This PC is already paired.",
-      "reconfigure_successful": "The IP addresses were updated."
+      "reconfigure_successful": "The IP addresses were updated.",
+      "pairing_updated": "This PC was already paired for this user: its pairing was replaced by the new one."
+    }
+  },
+  "issues": {
+    "unavailable_ip": {
+      "title": "{name} cannot be unlocked: unknown Home Assistant IP address",
+      "description": "{name} was paired to send its unlock requests to {ip}, which this Home Assistant host does not have anymore. Update the Home Assistant IP address with **Reconfigure** on the PC Bio Unlock entry, or delete the entry if this pairing is not used anymore."
     }
   },
   "exceptions": {
@@ -49,6 +56,9 @@
     },
     "unlock_failed": {
       "message": "Could not unlock {name}: {error}"
+    },
+    "unavailable_ip": {
+      "message": "Home Assistant has no IP address {ip} to receive the unlock requests of {name}."
     }
   }
 }
