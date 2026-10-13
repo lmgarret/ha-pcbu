@@ -14,7 +14,7 @@
     "pcbu"
   ],
   "requirements": [
-    "py-pcbu==0.7.0"
+    "py-pcbu==0.8.0"
   ],
   "version": "0.3.0"
 }

@@ -17,7 +17,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-from pcbu.errors import PairingError
+from pcbu.errors import InvalidTimestampError, PairingError
 from pcbu.helpers import get_ip, get_uuid
 from pcbu.models import PairingQRData
 from pcbu.tcp.pair_client import TCPPairClient
@@ -125,6 +125,9 @@ class PCBUConfigFlow(ConfigFlow, domain=DOMAIN):
             except PairingError as err:
                 _LOGGER.warning("Pairing refused: %s", err)
                 errors["base"] = "pairing_refused"
+            except InvalidTimestampError as err:
+                _LOGGER.warning("Pairing failed: %s", err)
+                errors["base"] = "clock_mismatch"
             except OSError as err:
                 if err.errno in UNREACHABLE_ERRNOS:
                     errors["base"] = "remote_unreachable"

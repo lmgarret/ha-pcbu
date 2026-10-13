@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from pcbu.errors import PairingError
+from pcbu.errors import InvalidTimestampError, PairingError
 from pcbu.models import PacketPairResponse, PairingMethod
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -83,6 +83,7 @@ async def test_pair(hass: HomeAssistant):
     [
         (TimeoutError, "timeout"),
         (PairingError("refused"), "pairing_refused"),
+        (InvalidTimestampError("clocks differ"), "clock_mismatch"),
         (OSError(errno.EHOSTUNREACH, "unreachable"), "remote_unreachable"),
         (OSError(errno.ECONNREFUSED, "refused"), "remote_unreachable"),
         (OSError(errno.EACCES, "denied"), "unknown"),

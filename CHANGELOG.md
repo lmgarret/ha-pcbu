@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Dedicated config flow error when the clocks of Home Assistant and the PC differ too much to pair, instead of "Unexpected error"
+
+### Changed
+- Requires py-pcbu 0.8.0
 
 ## [0.3.0] - 2026-09-26
 ### Added
