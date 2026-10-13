@@ -90,8 +90,12 @@ class PCBUnlockServer:
             return
 
         async def _start_tcp_server(server: TCPUnlockServer) -> None:
-            async with server:
-                await server.start()
+            try:
+                async with server:
+                    await server.start()
+            except OSError as err:
+                # caught here: awaiting the task when restarting must not raise it
+                _LOGGER.error("Unlock server (:%s) could not start: %s", port, err)
 
         new_server = TCPUnlockServer(locks=new_locks)
         task = self.hass.async_create_background_task(

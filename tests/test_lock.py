@@ -1,6 +1,7 @@
 """Test the unlock flow."""
 
 import asyncio
+import socket
 
 from homeassistant.components.lock import LockState
 from homeassistant.config_entries import ConfigEntryState
@@ -185,3 +186,41 @@ async def test_reload_with_pending_request(hass: HomeAssistant, locks):
     with pytest.raises(UnlockRejectedError):
         await request
     assert hass.states.get("lock.desktop_a").state == STATE_UNAVAILABLE
+
+
+async def test_restart_after_server_failure(
+    hass: HomeAssistant, socket_enabled, caplog
+):
+    """A server that could not start does not prevent adding locks afterwards."""
+    conf_a, conf_b = _lock_conf("a"), _lock_conf("b")
+    blocker = socket.socket()
+    # earlier tests leave the port in TIME_WAIT. A listening socket still blocks it
+    blocker.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    blocker.bind(("127.0.0.1", PORT))
+    blocker.listen()
+    try:
+        entry_a = MockConfigEntry(domain=DOMAIN, unique_id="a", data=conf_a.to_dict())
+        entry_a.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry_a.entry_id)
+        await hass.async_block_till_done()
+        await asyncio.sleep(0.1)
+        assert "Unlock server (:43990) could not start" in caplog.text
+    finally:
+        blocker.close()
+
+    entry_b = MockConfigEntry(domain=DOMAIN, unique_id="b", data=conf_b.to_dict())
+    entry_b.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry_b.entry_id)
+    await hass.async_block_till_done()
+    await asyncio.sleep(0.1)
+    assert hass.states.get("lock.desktop_b") is not None
+
+    request_b = asyncio.create_task(_client(conf_b).unlock(timeout=5))
+    await _wait_for_state(hass, "lock.desktop_b", LockState.LOCKED)
+    await hass.services.async_call(
+        "lock", "unlock", {"entity_id": "lock.desktop_b"}, blocking=True
+    )
+    assert (await request_b).password == conf_b.password
+
+    for entry in (entry_a, entry_b):
+        assert await hass.config_entries.async_unload(entry.entry_id)

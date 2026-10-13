@@ -7,7 +7,7 @@ import ipaddress
 import logging
 from typing import Any
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -140,6 +140,15 @@ class PCBUConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(lock_conf.pairing_id)
                 self._abort_if_unique_id_configured()
+                if (entry := self._find_same_session(lock_conf)) is not None:
+                    # paired again: the new pairing replaces the previous one
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        unique_id=lock_conf.pairing_id,
+                        title=lock_conf.remote_info.name,
+                        data=lock_conf.to_dict(),
+                        reason="pairing_updated",
+                    )
                 return self.async_create_entry(
                     title=lock_conf.remote_info.name, data=lock_conf.to_dict()
                 )
@@ -152,6 +161,26 @@ class PCBUConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, suggested),
             errors=errors,
         )
+
+    def _find_same_session(self, conf: PCBLockConfig) -> ConfigEntry | None:
+        """The entry pairing the same user session of the same PC, if any.
+
+        A PC can be paired once per user, so both the MAC address and the username
+        must match.
+        """
+        mac_address = conf.remote_info.mac_address.lower()
+        if not mac_address:
+            return None
+        # Windows may give a different case for the username
+        ignore_case = "windows" in conf.desktop_os.lower()
+        for entry in self._async_current_entries(include_ignore=False):
+            other = PCBLockConfig.from_dict(entry.data)
+            same_user = other.username == conf.username or (
+                ignore_case and other.username.lower() == conf.username.lower()
+            )
+            if other.remote_info.mac_address.lower() == mac_address and same_user:
+                return entry
+        return None
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
