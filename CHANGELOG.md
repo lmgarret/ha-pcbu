@@ -6,11 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.3.1] - 2026-10-13
 ### Added
 - Dedicated config flow error when the clocks of Home Assistant and the PC differ too much to pair, instead of "Unexpected error"
 
 ### Changed
-- Requires py-pcbu 0.8.0
+- Requires py-pcbu 0.8.0, which accepts clocks up to 2 minutes apart instead of 20 seconds, as the desktop does
 
 ## [0.3.0] - 2026-09-26
 ### Added
@@ -67,6 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - First commit
 
+[0.3.1]: https://github.com/lmgarret/ha-pcbu/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/lmgarret/ha-pcbu/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/lmgarret/ha-pcbu/compare/0.2.0...0.2.1
 [0.2.0]: https://github.com/lmgarret/ha-pcbu/compare/0.1.3...0.2.0
