@@ -31,6 +31,7 @@
       }
     },
     "error": {
+      "clock_mismatch": "The clocks of Home Assistant and the PC differ by more than 2 minutes. Synchronize both clocks (for example with NTP), then retry.",
       "invalid_ip": "Invalid IP address.",
       "pairing_refused": "The PC refused the pairing. Check the encryption key, and that the desktop app is waiting for a pairing.",
       "remote_unreachable": "The PC is unreachable.",
