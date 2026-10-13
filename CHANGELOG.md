@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.4.0] - 2026-10-13
 ### Added
 - Repair issue when an entry's Home Assistant IP address is not on this host anymore (e.g. Home Assistant moved), pointing to Reconfigure. The entry then fails to set up and retries, instead of showing a lock that can never be unlocked
 - Pairing the same user of the same PC again replaces its previous pairing, instead of adding a duplicate entry. Other users of the same PC are still paired separately
@@ -78,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - First commit
 
+[0.4.0]: https://github.com/lmgarret/ha-pcbu/compare/0.3.1...0.4.0
 [0.3.1]: https://github.com/lmgarret/ha-pcbu/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/lmgarret/ha-pcbu/compare/0.2.1...0.3.0
 [0.2.1]: https://github.com/lmgarret/ha-pcbu/compare/0.2.0...0.2.1
